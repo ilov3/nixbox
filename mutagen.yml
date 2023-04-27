@@ -1,0 +1,14 @@
+sync:
+  defaults:
+    flushOnCreate: true
+    ignore:
+      vcs: true
+  nix-configuration:
+    alpha: "./configuration.nix"
+    beta: "nixos:/etc/nixos/configuration.nix"
+    mode: "one-way-replica"
+    ignore:
+      paths:
+        - ".idea"
+        - "mutagen.yml"
+        - ".gitignore"
