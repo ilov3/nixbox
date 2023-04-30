@@ -9,12 +9,15 @@
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
     ];
+  boot.kernelPackages = pkgs.linuxKernel.packages.linux_6_2;
+  nix.settings.experimental-features = [ "nix-command" ];
 
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-  boot.loader.timeout = 0;
+  boot.loader.timeout = 5;
   boot.loader.systemd-boot.configurationLimit = 5;
+#  boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
   
   # networking.hostName = "nixos"; # Define your hostname.
   # Pick only one of the below networking options.
@@ -64,8 +67,10 @@
      shell = pkgs.zsh;
      packages = with pkgs; [
        wget
+       bat
        git
        fzf
+       neofetch
        htop
        minikube
        kubectl
@@ -74,6 +79,8 @@
        tmux
        zsh
        python37Full
+       python310Full
+       python38Full
        pipenv
        direnv
        awscli2
@@ -81,9 +88,12 @@
        docker
        cloud-utils
        gh
+       nixos-generators
+       nix-index
+
        gcc
+       cmake
        binutils
-       
        ncurses
        xorg.libX11
        xorg.libXext
@@ -93,19 +103,33 @@
        glib
      ];
    };
-  security.sudo.extraConfig = "ilov3 ALL=(ALL) NOPASSWD:ALL";
+  security.sudo.wheelNeedsPassword = false;
+  environment.shellAliases = {
+    nrs = "sudo nixos-rebuild switch";
+    reboot = "sudo reboot";
+  };
+
   programs.zsh.enable = true;
   programs.zsh.enableBashCompletion = true;
   programs.zsh.enableCompletion = true;
   programs.zsh.enableGlobalCompInit = true;
   programs.zsh.ohMyZsh.enable = true;
-  programs.zsh.ohMyZsh.plugins = [ "git" "aws" "direnv" ];
+  programs.zsh.ohMyZsh.plugins = [ "git" "aws" "direnv" "fzf" ];
   programs.zsh.ohMyZsh.theme = "afowler";
+
+  programs.command-not-found.enable = false;
+   programs.zsh.interactiveShellInit = ''
+      source ${pkgs.nix-index}/etc/profile.d/command-not-found.sh
+   '';
   
   programs.tmux.enable = true;
   programs.tmux.baseIndex = 1;
   programs.tmux.clock24 = true;
-  programs.tmux.plugins = [ pkgs.tmuxPlugins.resurrect pkgs.tmuxPlugins.continuum pkgs.tmuxPlugins.sensible ];
+  programs.tmux.plugins = [
+    pkgs.tmuxPlugins.resurrect
+    pkgs.tmuxPlugins.continuum
+    pkgs.tmuxPlugins.sensible
+  ];
   programs.tmux.extraConfig = ''
 unbind C-b
 set-option -g prefix C-a
@@ -137,48 +161,11 @@ bind -n M-9 select-window -t 9
 
 set -g mouse on
 set -g default-terminal "screen-256color"
-'';  
-  # List packages installed in system profile. To search, run:
-  # $ nix search wget
-  #environment.systemPackages = with pkgs; [
-  #  wget
-  #  git
-  #  htop
-  #];
-
-  # Some programs need SUID wrappers, can be configured further or are
-  # started in user sessions.
-  # programs.mtr.enable = true;
-  # programs.gnupg.agent = {
-  #   enable = true;
-  #   enableSSHSupport = true;
-  # };
-
-  # List services that you want to enable:
-
-  # Enable the OpenSSH daemon.
+'';
   services.openssh.enable = true;
   services.openssh.passwordAuthentication = false;
 
-  # Open ports in the firewall.
-  # networking.firewall.allowedTCPPorts = [ ... ];
-  # networking.firewall.allowedUDPPorts = [ ... ];
-  # Or disable the firewall altogether.
-  # networking.firewall.enable = false;
-
-  # Copy the NixOS configuration file and link it from the resulting system
-  # (/run/current-system/configuration.nix). This is useful in case you
-  # accidentally delete configuration.nix.
-  # system.copySystemConfiguration = true;
-
-  # This value determines the NixOS release from which the default
-  # settings for stateful data, like file locations and database versions
-  # on your system were taken. It‘s perfectly fine and recommended to leave
-  # this value at the release version of the first install of this system.
-  # Before changing this value read the documentation for this option
-  # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "22.11"; # Did you read the comment?
-  #environment.shells = [ pkgs.zsh ]
   virtualisation.docker.enable = true;
 }
 

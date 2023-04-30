@@ -7,8 +7,8 @@ sync:
     alpha: "./configuration.nix"
     beta: "nixos:/etc/nixos/configuration.nix"
     mode: "one-way-replica"
-    ignore:
-      paths:
-        - ".idea"
-        - "mutagen.yml"
-        - ".gitignore"
+  nix-hardware:
+    alpha: "./hardware-configuration.nix"
+    beta: "nixos:/etc/nixos/hardware-configuration.nix"
+    mode: "one-way-replica"
+
