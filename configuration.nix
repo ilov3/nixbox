@@ -3,7 +3,9 @@
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
 { config, pkgs, ... }:
-
+let
+  unstable = import <nixpkgs-unstable> {};
+in
 {
   imports =
     [ # Include the results of the hardware scan.
@@ -15,7 +17,7 @@
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-  boot.loader.timeout = 5;
+  boot.loader.timeout = 3;
   boot.loader.systemd-boot.configurationLimit = 5;
 #  boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
   
@@ -65,48 +67,57 @@
      extraGroups = [ "wheel" "docker" ]; # Enable ‘sudo’ for the user.
      openssh.authorizedKeys.keys = ["ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDU2fBq4fY54yvRRLBpEECfhKQ/sc9Pv0V6T01xGxVrq3NCDwoOyE2bNAKCMgVKoLfNICuOEUEENFpAFVacdI6hZlkqYBVsQ0OziIhxJb1vWoovjczcAXQjWgftYfTfKdTtIz9KpCFCa5FRjvuy0uAGSM79BcAMk2BeX9GnULavI/2b4n6sIB5lFzSEr/rOnbawpEKYKEzTeZvGdeKmQ96j8aum8FJeObOOp040Ux8G+uXi5x4tHYvDbTprodZcJmBTS1d29ZskBGkL3/k64EfjcQuTU5zBP6ebK+6oM/l77ZuqmwUJr7VE8L/Nq8OEzjGdF78fmlajtbkjW1fKODNnT2xR8WJN1rlGx/DN2khg695R9yqh0sbZ/waS89CQ8xFpI33eMjqInqNJkNlS85/XFcxcKKA4umOynt/j+AIEnGEfpoo+9BB166MCyhKyDxtjGOJLPRZnkOCI9QcbobJdVh0EVOO9xyhDsThNRuxFvHkSyQxURST3BXvTkMxqqdAyDEsnp1PzPmuCauxnbr6kuZKSa7yIaI7EUJ3VEWGh+CHiJf7b/Z8f2bh2MscGP05Z3SdU6pcY7BDsboFer+8aJUS0VF6DgcZlApYTEJwzydL1ECpnWZPFD+eVmqrOav4Cm0tDtdPBFlIGUlpgqkMhZFsRnAsd9nxg0h/Pg6Tu8w== ilov3@linuxbro"];
      shell = pkgs.zsh;
-     packages = with pkgs; [
-       wget
-       bat
-       git
-       fzf
-       neofetch
-       htop
-       minikube
-       kubectl
-       kubernetes-helm
-       k9s
-       tmux
-       zsh
-       python37Full
-       python310Full
-       python38Full
-       pipenv
-       direnv
-       awscli2
-       python310Packages.python-dotenv
-       docker
-       cloud-utils
-       gh
-       nixos-generators
-       nix-index
+     packages = [
+       pkgs.wget
+       pkgs.bat
+       pkgs.git
+       pkgs.fzf
+       pkgs.neofetch
+       pkgs.htop
+       unstable.minikube
+       pkgs.kubectl
+       pkgs.kubernetes-helm
+       unstable.k9s
+       unstable.tmux
+       unstable.zsh
+       pkgs.python37Full
+       pkgs.python310Full
+       pkgs.python38Full
+       unstable.pipenv
+       pkgs.direnv
+       pkgs.awscli2
+       pkgs.python310Packages.python-dotenv
+       unstable.docker
+       unstable.dive
+       pkgs.cloud-utils
+       pkgs.gh
+       pkgs.nixos-generators
+       pkgs.nix-index
+       pkgs.glances
 
-       gcc
-       cmake
-       binutils
-       ncurses
-       xorg.libX11
-       xorg.libXext
-       xorg.libXrender
-       xorg.libICE
-       xorg.libSM
-       glib
+       pkgs.gcc
+       pkgs.cmake
+       pkgs.binutils
+       pkgs.ncurses
+       pkgs.xorg.libX11
+       pkgs.xorg.libXext
+       pkgs.xorg.libXrender
+       pkgs.xorg.libICE
+       pkgs.xorg.libSM
+       pkgs.glib
      ];
    };
   security.sudo.wheelNeedsPassword = false;
   environment.shellAliases = {
     nrs = "sudo nixos-rebuild switch";
     reboot = "sudo reboot";
+    po = "sudo poweroff";
+    mks = "minikube start --driver=docker --memory 6g --cpus 4 --disable-metrics --mount --mount-string=/home/ilov3:/home/ilov3";
+    mindocker = "eval $(minikube -p minikube docker-env)";
+    resenvdocker = "eval $(minikube -p minikube docker-env -u)";
+    saddresources = "pipenv run pep_data server add-default-resources";
+    sstart = "pipenv run pep_data server start";
+    sstop = "pipenv run pep_data server stop";
   };
 
   programs.zsh.enable = true;
@@ -165,7 +176,10 @@ set -g default-terminal "screen-256color"
   services.openssh.enable = true;
   services.openssh.passwordAuthentication = false;
 
+  services.qemuGuest.enable = true;
+
   system.stateVersion = "22.11"; # Did you read the comment?
   virtualisation.docker.enable = true;
+  networking.firewall.enable = false;
 }
 
