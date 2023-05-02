@@ -1,73 +1,30 @@
-# Edit this configuration file to define what should be installed on
-# your system.  Help is available in the configuration.nix(5) man page
-# and in the NixOS manual (accessible by running ‘nixos-help’).
-
 { config, pkgs, ... }:
 let
   unstable = import <nixpkgs-unstable> {};
 in
 {
   imports =
-    [ # Include the results of the hardware scan.
+    [
       ./hardware-configuration.nix
     ];
   boot.kernelPackages = pkgs.linuxKernel.packages.linux_6_2;
   nix.settings.experimental-features = [ "nix-command" ];
 
-  # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.timeout = 3;
   boot.loader.systemd-boot.configurationLimit = 5;
-#  boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
-  
-  # networking.hostName = "nixos"; # Define your hostname.
-  # Pick only one of the below networking options.
-  networking.wireless.enable = false;  # Enables wireless support via wpa_supplicant.
-  # networking.networkmanager.enable = true;  # Easiest to use and most distros use this by default.
+  networking.networkmanager.enable = true;
 
-  # Set your time zone.
   time.timeZone = "Europe/Istanbul";
 
-  # Configure network proxy if necessary
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
-
-  # Select internationalisation properties.
-  # i18n.defaultLocale = "en_US.UTF-8";
-  # console = {
-  #   font = "Lat2-Terminus16";
-  #   keyMap = "us";
-  #   useXkbConfig = true; # use xkbOptions in tty.
-  # };
-
-  # Enable the X11 windowing system.
-  services.xserver.enable = false;
-
-  # Configure keymap in X11
-  # services.xserver.layout = "us";
-  # services.xserver.xkbOptions = {
-  #   "eurosign:e";
-  #   "caps:escape" # map caps to escape.
-  # };
-
-  # Enable CUPS to print documents.
-  # services.printing.enable = true;
-
-  # Enable sound.
-  sound.enable = false;
-  hardware.pulseaudio.enable = false;
-
-  # Enable touchpad support (enabled default in most desktopManager).
-  # services.xserver.libinput.enable = true;
-
-  # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.ilov3 = {
      isNormalUser = true;
-     extraGroups = [ "wheel" "docker" ]; # Enable ‘sudo’ for the user.
+     extraGroups = [ "wheel" "docker" "networkmanager" ]; # Enable ‘sudo’ for the user.
      openssh.authorizedKeys.keys = ["ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDU2fBq4fY54yvRRLBpEECfhKQ/sc9Pv0V6T01xGxVrq3NCDwoOyE2bNAKCMgVKoLfNICuOEUEENFpAFVacdI6hZlkqYBVsQ0OziIhxJb1vWoovjczcAXQjWgftYfTfKdTtIz9KpCFCa5FRjvuy0uAGSM79BcAMk2BeX9GnULavI/2b4n6sIB5lFzSEr/rOnbawpEKYKEzTeZvGdeKmQ96j8aum8FJeObOOp040Ux8G+uXi5x4tHYvDbTprodZcJmBTS1d29ZskBGkL3/k64EfjcQuTU5zBP6ebK+6oM/l77ZuqmwUJr7VE8L/Nq8OEzjGdF78fmlajtbkjW1fKODNnT2xR8WJN1rlGx/DN2khg695R9yqh0sbZ/waS89CQ8xFpI33eMjqInqNJkNlS85/XFcxcKKA4umOynt/j+AIEnGEfpoo+9BB166MCyhKyDxtjGOJLPRZnkOCI9QcbobJdVh0EVOO9xyhDsThNRuxFvHkSyQxURST3BXvTkMxqqdAyDEsnp1PzPmuCauxnbr6kuZKSa7yIaI7EUJ3VEWGh+CHiJf7b/Z8f2bh2MscGP05Z3SdU6pcY7BDsboFer+8aJUS0VF6DgcZlApYTEJwzydL1ECpnWZPFD+eVmqrOav4Cm0tDtdPBFlIGUlpgqkMhZFsRnAsd9nxg0h/Pg6Tu8w== ilov3@linuxbro"];
      shell = pkgs.zsh;
      packages = [
+       pkgs.duf
        pkgs.wget
        pkgs.bat
        pkgs.git
@@ -94,6 +51,7 @@ in
        pkgs.nixos-generators
        pkgs.nix-index
        pkgs.glances
+       pkgs.ncdu
 
        pkgs.gcc
        pkgs.cmake
@@ -140,6 +98,7 @@ in
     pkgs.tmuxPlugins.resurrect
     pkgs.tmuxPlugins.continuum
     pkgs.tmuxPlugins.sensible
+    pkgs.tmuxPlugins.dracula
   ];
   programs.tmux.extraConfig = ''
 unbind C-b
@@ -172,6 +131,13 @@ bind -n M-9 select-window -t 9
 
 set -g mouse on
 set -g default-terminal "screen-256color"
+
+set -g @dracula-plugins "cpu-usage ram-usage"
+set -g @dracula-cpu-display-load true
+set -g @dracula-show-flags true
+set -g @dracula-refresh-rate 2
+
+run-shell ${pkgs.tmuxPlugins.dracula}/share/tmux-plugins/dracula/dracula.tmux
 '';
   services.openssh.enable = true;
   services.openssh.passwordAuthentication = false;
